@@ -1,0 +1,9 @@
+{
+  "biome.enabled": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "always"
+  },
+  "editor.indentSize": 2
+}

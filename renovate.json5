@@ -1,0 +1,24 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:best-practices',
+    'group:allNonMajor',
+    ':enableVulnerabilityAlertsWithLabel(security)',
+  ],
+  prConcurrentLimit: 0,
+  prHourlyLimit: 0,
+  labels: ['dependencies'],
+  packageRules: [
+    {
+      matchUpdateTypes: ['major', 'minor', 'patch'],
+      minimumReleaseAge: '7 days',
+    },
+    {
+      matchUpdateTypes: ['major', 'minor', 'patch'],
+      vulnerabilityAlerts: {
+        enabled: true,
+      },
+      minimumReleaseAge: null,
+    },
+  ],
+}

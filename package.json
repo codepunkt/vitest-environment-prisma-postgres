@@ -1,0 +1,55 @@
+{
+  "name": "vitest-environment-prisma-postgres",
+  "version": "1.0.0-alpha.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "biome lint",
+    "format": "biome format --write",
+    "format:check": "biome format",
+    "release": "release-it",
+    "test": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "vitest",
+    "prisma",
+    "postgres",
+    "prisma orm",
+    "postgesql",
+    "test",
+    "testing",
+    "test isolation",
+    "transaction"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    },
+    "./setup": {
+      "require": "./dist/setup.js",
+      "import": "./dist/setup.js"
+    }
+  },
+  "author": "Christoph Werner <christoph@codepunkt.de>",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "2.3.7",
+    "@prisma/adapter-pg": "7.0.1",
+    "@types/node": "24.10.1",
+    "@vitest/coverage-v8": "4.0.14",
+    "prisma": "7.0.1",
+    "release-it": "19.0.6",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.14"
+  },
+  "peerDependencies": {
+    "@prisma/adapter-pg": ">=4 <8",
+    "prisma": ">=4 <8",
+    "vitest": ">=4 <5"
+  }
+}
