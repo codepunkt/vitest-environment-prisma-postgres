@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    /* base */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    /* strictness */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* how to sort these */
+    "lib": ["es2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "sourceMap": true,
+    "outDir": "dist",
+
+    /* path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/*"]
+    },
+
+    /* included type definitions */
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
