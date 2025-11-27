@@ -6,8 +6,10 @@
   "scripts": {
     "build": "tsup",
     "lint": "biome lint",
-    "format": "biome format --write ./src",
-    "release": "release-it"
+    "format": "biome format --write",
+    "format:check": "biome format",
+    "release": "release-it",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "vitest",
