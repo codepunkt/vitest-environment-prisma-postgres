@@ -78,7 +78,7 @@ export default defineConfig({
     setupFiles: [
       // Registers hooks that start and roll back a database transaction around every test.
       'vitest-environment-prisma-postgres/setup',
-      // Your own setup file where you mock your Prisma client to use the test environment's client.
+      // This is where you mock your Prisma client to use the test environment's client.
       './vitest.setup.ts'
     ],
   }
@@ -125,7 +125,7 @@ Please make sure that you're mocking exactly the module path that your code is u
 
 #### Step 6: Seed once per test run
 
-Before you execute your tests with Vitest, make sure to seed your test database once. Don't seed your database in-between individual test cases.
+Make sure to seed your test database at the beginning of every test run. 
 
 ## TypeScript configuration
 
@@ -157,9 +157,8 @@ Without adding the package to `compilerOptions.types`, TypeScript will not inclu
 vi.mock('./generated/prisma-client', () => ({
   default: globalThis.prismaPostgresTestContext.client,
   //                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-  //                  Element implicitly has an 'any'
-  //                  type because type 'typeof globalThis'
-  //                  has no index signature.
+  //                  Error: Element implicitly has an 'any' type because
+  //                  type 'typeof globalThis' has no index signature.
 }));
 ```
 
