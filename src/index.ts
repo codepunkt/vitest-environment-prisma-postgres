@@ -2,54 +2,101 @@ import { createRequire } from 'node:module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type { Environment } from 'vitest/environments';
 import { builtinEnvironments } from 'vitest/environments';
-import type {
-  PrismaClientLike,
-  PrismaPostgresEnvironmentOptions,
-  PublicPrismaPostgresTestContext,
-} from './dts/index.js';
-
-/**
- * This environment assumes that tests which hit the database do not run concurrently in the same worker.
- * Do not use test.concurrent or high maxConcurrency with DB-integration tests using this env.
- */
+import type { PrismaClientLike, PrismaPostgresEnvironmentOptions } from './dts/index.js';
 
 const require = createRequire(import.meta.url);
 
-export class PrismaPostgresTestContext {
-  private readonly options: PrismaPostgresEnvironmentOptions;
+/**
+ * Creates the test context used by the `prisma-postgres` Vitest environment.
+ *
+ * Responsibilities:
+ * - Load the user's Prisma client from the configured `clientPath`.
+ * - Wire it to a PostgreSQL connection (via `PrismaPg`), connecting to
+ *   `databaseUrl` or `process.env.DATABASE_URL` (preferrably).
+ * - Expose a `client` proxy that:
+ *   - forwards all calls to the current interactive transaction client
+ *   - throws if accessed outside an active test transaction
+ *   - replaces nested `$transaction` calls with savepoint-based transactions
+ *
+ * @param options PrismaPostgresEnvironmentOptions
+ * @returns An object exposed as `global.prismaPostgresTestContext` and used by both
+ * the Vitest environment and the user's Prisma client mock.
+ */
+function createPrismaPostgresTestContext(options: PrismaPostgresEnvironmentOptions) {
+  let savePointCounter = 0;
 
-  private connected = false;
-  private originalClient: PrismaClientLike;
-  private savePointCounter = 0;
-  private transactionClient: PrismaClientLike | null = null;
-  private triggerTransactionEnd: () => void = () => {};
+  /**
+   * The Prisma client used inside the current test transaction.
+   * Set in `beginTestTransaction`, cleared in `endTestTransaction`.
+   * All calls made through `clientProxy` forward to this instance.
+   */
+  let transactionClient: PrismaClientLike | null = null;
 
-  constructor(options: PrismaPostgresEnvironmentOptions) {
-    this.options = options;
-    const { PrismaClient } = require(options.clientPath);
-    const adapter = new PrismaPg({
+  /**
+   * Ends the interactive transaction started by `beginTestTransaction`.
+   * Invoked by `afterEach` from the environment's setup file.
+   * This triggers a rollback of the test's database changes.
+   */
+  let internalEndTestTransaction: () => void = () => {};
+
+  const { PrismaClient } = require(options.clientPath);
+  const originalClient: PrismaClientLike = new PrismaClient({
+    adapter: new PrismaPg({
       connectionString: options.databaseUrl ?? process.env.DATABASE_URL!,
-    });
-    this.originalClient = new PrismaClient({ adapter, log: options.log });
-  }
+    }),
+    log: options.log,
+  });
 
   /**
-   * Public API that we expose on globalThis.prismaPostgresTestContext
+   * Emulates Prisma's nested `$transaction` behavior inside an active interactive
+   * transaction using PostgreSQL savepoints.
+   *
+   * Prisma does not support starting a new interactive transaction while one is
+   * already open. To allow code-under-test to use `$transaction` normally, we:
+   *
+   *   1. Create a SAVEPOINT before running the nested transaction body
+   *   2. Execute either:
+   *        - the callback form:    prisma.$transaction(async (tx) => ...)
+   *        - the array form:       prisma.$transaction([op1, op2, ...])
+   *   3. On success: RELEASE the savepoint
+   *   4. On error: ROLLBACK TO the savepoint and rethrow the error
+   *
+   * This provides correct nested-transaction semantics while keeping the outer
+   * interactive transaction open for the duration of the test.
    */
-  getPublicContext(): PublicPrismaPostgresTestContext {
-    return {
-      client: this.clientProxy,
-      beginTestTransaction: () => this.beginTestTransaction(),
-      endTestTransaction: () => this.endTestTransaction(),
-    };
-  }
+  const fakeInnerTransactionMethod = async (
+    arg: PromiseLike<unknown>[] | ((client: PrismaClientLike) => Promise<unknown>),
+  ) => {
+    if (transactionClient === null) {
+      throw new Error('Nested $transaction called without an active test transaction.');
+    }
+
+    const savePointId = `vitest_environment_prisma_postgres_${++savePointCounter}`;
+    await transactionClient.$executeRawUnsafe?.(`SAVEPOINT ${savePointId};`);
+
+    const run = () => (Array.isArray(arg) ? Promise.all(arg) : arg(transactionClient!));
+
+    try {
+      const result = await run();
+      await transactionClient.$executeRawUnsafe?.(`RELEASE SAVEPOINT ${savePointId};`);
+      return result;
+    } catch (err) {
+      await transactionClient.$executeRawUnsafe?.(`ROLLBACK TO SAVEPOINT ${savePointId};`);
+      throw err;
+    }
+  };
 
   /**
-   * Proxy that forwards to the current tx client and overrides nested $transaction.
+   * A proxy that behaves like the user's Prisma client, but always forwards
+   * calls to the currently active `transactionClient`.
+   *
+   * This is what users use to mock their regular Prisma client with. If
+   * accessed outside of an active test transaction, it throws with a helpful
+   * error message.
    */
-  private readonly clientProxy: PrismaClientLike = new Proxy({} as PrismaClientLike, {
+  const client: PrismaClientLike = new Proxy({} as PrismaClientLike, {
     get: (_target, name: keyof PrismaClientLike | symbol) => {
-      if (!this.transactionClient) {
+      if (!transactionClient) {
         throw new Error(
           [
             'prismaPostgresTestContext.client was accessed outside of an active test transaction.',
@@ -59,10 +106,10 @@ export class PrismaPostgresTestContext {
       }
 
       if (name === '$transaction') {
-        return this.fakeInnerTransactionMethod.bind(this);
+        return fakeInnerTransactionMethod;
       }
 
-      const target = this.transactionClient as any;
+      const target = transactionClient as any;
       const value = target[name];
 
       if (typeof value === 'function') {
@@ -74,84 +121,47 @@ export class PrismaPostgresTestContext {
   });
 
   /**
-   * Called once from environment.setup to ensure the client is connected
-   * and interactive transactions are supported.
+   * Executed `beforeEach` test.
+   *
+   * Starts an interactive Prisma transaction and defines a new
+   * `internalEndTestTransaction` to rollback the interactive transaction,
+   * called by `afterEach`.
+   *
+   * Also, during the runtime of the interactive transaction, defines the
+   * `transactionClient` to be used by the tests being executed, supposed to
+   * mock the standard Prisma client at test runtime.
+   *
+   * @returns A promise that resolves when the transaction is ready and the
+   * test can begin.
    */
-  async init(): Promise<void> {
-    await this.originalClient.$connect();
-    this.connected = true;
-  }
+  const beginTestTransaction = async () => {
+    return new Promise<void>((resolveBeforeEach) => {
+      const testTransactionFn = (tx: PrismaClientLike) => {
+        transactionClient = tx;
+        resolveBeforeEach();
 
-  /**
-   * Starts an interactive transaction and binds transactionClient to the proxy.
-   */
-  async beginTestTransaction(): Promise<void> {
-    if (!this.connected) {
-      await this.init();
-    }
+        return new Promise((_commitTransaction, rejectTransaction) => {
+          internalEndTestTransaction = () => {
+            rejectTransaction();
+            transactionClient = null;
+          };
+        });
+      };
 
-    return new Promise<void>((resolve) =>
-      this.originalClient
-        .$transaction((transactionClient) => {
-          // wrap transactionClient to override nested $transaction
-          this.transactionClient = transactionClient;
+      const testTransactionPromise = originalClient.$transaction(testTransactionFn, options.transactionOptions);
 
-          // allow the test to start
-          resolve();
+      // catch transaction rollback errors
+      testTransactionPromise.catch(() => true);
+    });
+  };
 
-          // keep transaction open until endTransaction calls triggerTransactionEnd
-          return new Promise<void>((_innerResolve, innerReject) => {
-            this.triggerTransactionEnd = () => {
-              innerReject(new Error('rollback test transaction'));
-              this.transactionClient = null;
-            };
-          });
-        }, this.options.transactionOptions)
-        .catch(() => {
-          // swallow transaction error when we reject for rollback
-          return true;
-        }),
-    );
-  }
-
-  /**
-   * Ends the interactive transaction.
-   */
-  async endTestTransaction(): Promise<void> {
-    this.triggerTransactionEnd();
-  }
-
-  async teardown(): Promise<void> {
-    await this.originalClient.$disconnect?.();
-  }
-
-  /**
-   * Nested $transaction implementation using savepoints.
-   */
-  private async fakeInnerTransactionMethod(
-    arg: PromiseLike<unknown>[] | ((client: PrismaClientLike) => Promise<unknown>),
-  ) {
-    const transactionClient = this.transactionClient;
-
-    if (transactionClient === null) {
-      throw new Error('Nested $transaction called without an active test transaction.');
-    }
-
-    const savePointId = `vitest_environment_prisma_postgres_${++this.savePointCounter}`;
-    await transactionClient.$executeRawUnsafe?.(`SAVEPOINT ${savePointId};`);
-
-    // handles both $transaction overloads, they array and functional form
-    const run = () => (Array.isArray(arg) ? Promise.all(arg) : arg(transactionClient!));
-
-    try {
-      const result = await run();
-      await transactionClient.$executeRawUnsafe?.(`RELEASE SAVEPOINT ${savePointId};`);
-      return result;
-    } catch (err) {
-      await transactionClient.$executeRawUnsafe?.(`ROLLBACK TO SAVEPOINT ${savePointId};`);
-      throw err;
-    }
-  }
+  return {
+    client,
+    beginTestTransaction,
+    endTestTransaction: () => internalEndTestTransaction(),
+    setup: () => originalClient.$connect(),
+    teardown: () => originalClient.$disconnect(),
+  };
 }
 
 const environmentName = 'prisma-postgres';
@@ -167,16 +177,17 @@ const environment: Environment = {
       throw new Error('no database url defined!');
     }
 
-    const prismaPostgresTestContext = new PrismaPostgresTestContext(options);
-    await prismaPostgresTestContext.init();
+    const ctx = createPrismaPostgresTestContext(options);
+    await ctx.setup();
 
-    global.prismaPostgresTestContext = prismaPostgresTestContext.getPublicContext();
+    // make context available globally for setupFiles.
+    global.prismaPostgresTestContext = ctx;
 
     const { teardown: nodeEnvironmentTeardown } = await builtinEnvironments.node.setup(global, {});
 
     return {
       async teardown(global) {
-        await prismaPostgresTestContext.teardown();
+        await ctx.teardown();
         await nodeEnvironmentTeardown(global);
       },
     };

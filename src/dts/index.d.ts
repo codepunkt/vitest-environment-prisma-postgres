@@ -28,9 +28,3 @@ export interface PrismaPostgresEnvironmentOptions {
   /** Allows to set options for the test transactions. Default values are defined by Prisma. */
   transactionOptions?: TransactionOptions;
 }
-
-export interface PublicPrismaPostgresTestContext {
-  client: PrismaClientLike;
-  beginTestTransaction(): Promise<void>;
-  endTestTransaction(): Promise<void>;
-}
