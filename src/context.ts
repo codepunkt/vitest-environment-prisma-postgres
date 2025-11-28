@@ -29,7 +29,7 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
    * Invoked by `afterEach` from the environment's setup file.
    * This triggers a rollback of the test's database changes.
    */
-  let internalEndTestTransaction: () => void = () => {};
+  let internalEndTestTransaction: (() => void) | null = null;
 
   const { PrismaClient } = require(options.clientPath);
   const originalClient: PrismaClientLike = new PrismaClient({
@@ -159,7 +159,7 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
   return {
     client,
     beginTestTransaction,
-    endTestTransaction: () => internalEndTestTransaction(),
+    endTestTransaction: () => internalEndTestTransaction?.(),
     setup: () => originalClient.$connect(),
     teardown: () => originalClient.$disconnect(),
   };
