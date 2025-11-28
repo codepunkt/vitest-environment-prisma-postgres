@@ -13,12 +13,5 @@
       matchUpdateTypes: ['major', 'minor', 'patch'],
       minimumReleaseAge: '7 days',
     },
-    {
-      matchUpdateTypes: ['major', 'minor', 'patch'],
-      vulnerabilityAlerts: {
-        enabled: true,
-      },
-      minimumReleaseAge: null,
-    },
   ],
 }
