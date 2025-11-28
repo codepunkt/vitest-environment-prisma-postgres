@@ -37,7 +37,7 @@
   "author": "Christoph Werner <christoph@codepunkt.de>",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "2.3.7",
+    "@biomejs/biome": "2.3.8",
     "@prisma/adapter-pg": "7.0.1",
     "@release-it/conventional-changelog": "10.0.2",
     "@types/node": "24.10.1",
