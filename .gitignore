@@ -3,3 +3,4 @@ dist
 node_modules
 test/prisma-client
 .DS_Store
+.env
