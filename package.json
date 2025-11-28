@@ -53,5 +53,8 @@
     "@prisma/adapter-pg": ">=4 <8",
     "prisma": ">=4 <8",
     "vitest": ">=4 <5"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
