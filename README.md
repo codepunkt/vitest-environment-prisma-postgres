@@ -89,18 +89,7 @@ export default defineConfig({
 
 This environment will create the Prisma client and PostgreSQL adapter for your tests, so it has to know the connectionString to your test database.
 
-You can provide it by running your tests with a `DATABASE_URL` environment variable (recommended), or set it with the `databaseUrl` option in your Vitest config:
-
-```ts
-environmentOptions: {
-  'prisma-postgres': {
-    clientPath: "./generated/prisma-client",
-    databaseUrl: 'postgres://...',
-  }
-}
-```
-
-This connection string must point to a PostgreSQL instance for testing. It can point to:
+You provide it by running your tests with a `DATABASE_URL` environment variable, which must point to a PostgreSQL instance for testing. It can point to:
 
 - a real local PostgresSQL instance
 - a docker-compose container

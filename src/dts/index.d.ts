@@ -5,8 +5,11 @@ declare global {
 export interface PrismaClientLike {
   $connect(): Promise<void>;
   $disconnect(): Promise<void>;
-  $transaction<T>(fn: (tx: PrismaClientLike) => Promise<T>, options?: TransactionOptions): Promise<T>;
-  $executeRawUnsafe?(sql: string): Promise<unknown>;
+  $transaction<T>(
+    fn: (tx: PrismaClientLike) => Promise<T>,
+    options?: TransactionOptions,
+  ): Promise<T>;
+  $executeRawUnsafe(sql: string): Promise<unknown>;
 }
 
 interface TransactionOptions {
