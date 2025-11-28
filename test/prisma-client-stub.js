@@ -23,11 +23,9 @@ import { vi } from 'vitest';
  *   - no matter how many times Vitest instantiates this module, all instances
  *     point to the single global array
  */
-const globalForPrisma = globalThis as any;
-if (!globalForPrisma.__prismaClientStubInstances)
-  globalForPrisma.__prismaClientStubInstances = [];
-export const prismaClientStubInstances: PrismaClient[] =
-  globalForPrisma.__prismaClientStubInstances;
+if (!globalThis.__prismaClientStubInstances)
+  globalThis.__prismaClientStubInstances = [];
+export const prismaClientStubInstances = globalThis.__prismaClientStubInstances;
 
 export class PrismaClient {
   constructor() {
@@ -41,7 +39,7 @@ export class PrismaClient {
   $disconnect = vi.fn();
   $executeRawUnsafe = vi.fn();
 
-  $transaction = vi.fn(async <T>(fn: (tx: unknown) => Promise<T>) => {
+  $transaction = vi.fn(async (fn) => {
     const tx = {
       $connect: this.$connect,
       $disconnect: this.$disconnect,
