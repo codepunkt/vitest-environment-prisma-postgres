@@ -1,5 +1,7 @@
 declare global {
-  var prismaPostgresTestContext: PublicPrismaPostgresTestContext;
+  var prismaPostgresTestContext: {
+    client: PrismaClientLike;
+  };
 }
 
 export interface PrismaClientLike {
