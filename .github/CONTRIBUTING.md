@@ -1,7 +1,5 @@
 # Contributing to vitest-environment-prisma-postgres
 
-## Thank You
-
 Thank you for considering contributing to vitest-environment-prisma-postgres! Whether you're fixing a typo, reporting a bug, or proposing a new feature, your contribution helps make database testing faster and easier for the entire Vitest and Prisma community. This is a small project maintained in limited time, and every contribution is genuinely appreciated.
 
 ## How You Can Contribute
