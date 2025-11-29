@@ -1,8 +1,18 @@
 {
   "name": "vitest-environment-prisma-postgres",
-  "version": "1.0.0-alpha.0",
-  "description": "",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Christoph Werner <christoph@codepunkt.de>",
+  "description": "Vitest environment for Prisma & PostgreSQL designed for fast integration tests: seed your database once with production-like data, then run each test in a transaction that is rolled back after execution. Tests remain isolated without expensive reseeding.",
   "type": "module",
+  "packageManager": "pnpm@9.12.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codepunkt/vitest-environment-prisma-postgres"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "build": "tsup",
     "lint": "biome lint",
@@ -34,12 +44,10 @@
       "import": "./dist/setup.js"
     }
   },
-  "author": "Christoph Werner <christoph@codepunkt.de>",
-  "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "2.3.8",
     "@prisma/adapter-pg": "7.0.1",
-    "@release-it/conventional-changelog": "10.0.2",
+    "@release-it/conventional-changelog": "10.0.1",
     "@types/node": "24.10.1",
     "@vitest/coverage-v8": "4.0.14",
     "dotenv-cli": "11.0.0",
@@ -55,6 +63,7 @@
     "vitest": ">=4 <5"
   },
   "files": [
+    "CHANGELOG.md",
     "dist"
   ]
 }
