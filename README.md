@@ -106,7 +106,7 @@ In your setupFile, `vitest.setup.ts`, mock your local Prisma client with the cli
 import { vi } from 'vitest';
 
 vi.mock('./generated/prisma-client', () => ({
-  default: globalThis.prismaPostgresTestContext.client,
+  default: prismaPostgresTestContext.client,
 }));
 ```
 

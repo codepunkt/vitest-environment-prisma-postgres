@@ -1,4 +1,4 @@
 import { afterEach, beforeEach } from 'vitest';
 
-beforeEach(globalThis.prismaPostgresTestContext.beginTestTransaction);
-afterEach(globalThis.prismaPostgresTestContext.endTestTransaction);
+beforeEach(prismaPostgresTestContext.beginTestTransaction);
+afterEach(prismaPostgresTestContext.endTestTransaction);
