@@ -5,7 +5,7 @@
   <a href="https://www.npmjs.com/package/vitest-environment-prisma-postgres"><img src="https://img.shields.io/npm/v/vitest-environment-prisma-postgres.svg?style=flat" /></a>
   <a href="https://github.com/codepunkt/vitest-environment-prisma-postgres/blob/main/.github/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" /></a>
   <a href="https://github.com/codepunkt/vitest-environment-prisma-postgres/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" /></a>
-  <a href="https://codecov.io/gh/codepunkt/vitest-environment-prisma-postgres" ><img src="https://codecov.io/gh/codepunkt/vitest-environment-prisma-postgres/graph/badge.svg?token=BI1IWN0F3G"/> </a>
+  <a href="https://codecov.io/gh/codepunkt/vitest-environment-prisma-postgres"><img src="https://codecov.io/gh/codepunkt/vitest-environment-prisma-postgres/graph/badge.svg?token=BI1IWN0F3G" /></a>
   <br />
   <br />
   <a href="#features">Features</a>
