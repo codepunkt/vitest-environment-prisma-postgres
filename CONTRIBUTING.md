@@ -1,10 +1,10 @@
 # Contributing to vitest-environment-prisma-postgres
 
-## 🙏 Thank You
+## Thank You
 
 Thank you for considering contributing to vitest-environment-prisma-postgres! Whether you're fixing a typo, reporting a bug, or proposing a new feature, your contribution helps make database testing faster and easier for the entire Vitest and Prisma community. This is a small project maintained in limited time, and every contribution is genuinely appreciated.
 
-## 💡 How You Can Contribute
+## How You Can Contribute
 
 Contributions come in many forms, and all of them are valued:
 
@@ -16,7 +16,7 @@ Contributions come in many forms, and all of them are valued:
 
 You don't need to write code to make a meaningful impact!
 
-## 🐛 Reporting Issues
+## Reporting Issues
 
 Before creating a new issue, please:
 
@@ -90,7 +90,7 @@ pnpm run build                 # Build the package
 
 The build output will be in the `dist/` directory.
 
-## ✨ Submitting Changes
+## Submitting Changes
 
 ### Before You Start
 
@@ -118,7 +118,7 @@ For **small fixes** (typos, small bug fixes, documentation improvements), feel f
    - Run code quality checks: `pnpm run lint && pnpm run format:check && pnpm run typecheck`
    - Update documentation if needed (README, code comments, etc.)
 
-3. **Commit your changes** following our [commit message guidelines](#-commit-message-guidelines)
+3. **Commit your changes** following our [commit message guidelines](#commit-message-guidelines)
 
 4. **Push to your fork**:
    ```bash
@@ -143,7 +143,7 @@ For **small fixes** (typos, small bug fixes, documentation improvements), feel f
 - Once approved, your PR will be merged using "Squash and Merge"
 - Your contribution will be included in the next release with automated changelog generation
 
-## 📝 Commit Message Guidelines
+## Commit Message Guidelines
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated changelog generation and semantic versioning.
 
@@ -190,7 +190,7 @@ Include a detailed description in the commit body explaining:
 - **Don't capitalize** the first letter of the description
 - **No period** at the end of the description
 
-## 🧪 Testing Guidelines
+## Testing Guidelines
 
 Every code contribution should include appropriate tests.
 
@@ -223,13 +223,13 @@ describe('MyFeature', () => {
 });
 ```
 
-## 💬 Getting Help
+## Getting Help
 
 - **Usage questions?** Check the [README](./README.md) first
 - **Found a bug?** [Open an issue](https://github.com/codepunkt/vitest-environment-prisma-postgres/issues/new)
 - **Want to discuss a feature?** [Open an issue](https://github.com/codepunkt/vitest-environment-prisma-postgres/issues/new) for discussion
 - **General questions?** Feel free to start a discussion or comment on relevant issues
 
-## 📜 License
+## License
 
 By contributing to vitest-environment-prisma-postgres, you agree that your contributions will be licensed under the [MIT License](./LICENSE).
