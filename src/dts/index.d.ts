@@ -1,6 +1,8 @@
 declare global {
   var prismaPostgresTestContext: {
+    beginTestTransaction: () => Promise<void>;
     client: PrismaClientLike;
+    endTestTransaction: () => void;
   };
 }
 
