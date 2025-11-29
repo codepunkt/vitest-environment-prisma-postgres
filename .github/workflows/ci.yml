@@ -22,7 +22,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
         with:
-          version: 10
+          version: 10.24.0
       - name: Install Dependencies
         run: |
             pnpm install --frozen-lockfile
