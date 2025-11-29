@@ -15,9 +15,10 @@
   },
   "scripts": {
     "build": "tsup",
-    "lint": "biome lint",
     "format": "biome format --write",
     "format:check": "biome format",
+    "lint": "biome lint",
+    "prepare": "husky",
     "release": "dotenv -e .env -- release-it",
     "test": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
@@ -51,6 +52,7 @@
     "@types/node": "24.10.1",
     "@vitest/coverage-v8": "4.0.14",
     "dotenv-cli": "11.0.0",
+    "husky": "9.1.7",
     "prisma": "7.0.1",
     "release-it": "19.0.6",
     "tsup": "8.5.1",
