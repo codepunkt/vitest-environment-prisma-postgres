@@ -118,7 +118,7 @@ For **small fixes** (typos, small bug fixes, documentation improvements), feel f
    - Run code quality checks: `pnpm run lint && pnpm run format:check && pnpm run typecheck`
    - Update documentation if needed (README, code comments, etc.)
 
-3. **Commit your changes** following our [commit message guidelines](#📝-commit-message-guidelines)
+3. **Commit your changes** following our [commit message guidelines](#-commit-message-guidelines)
 
 4. **Push to your fork**:
    ```bash
