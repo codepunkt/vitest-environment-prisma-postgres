@@ -42,8 +42,8 @@ The more details you provide, the easier it is to understand and fix the issue.
 
 ### Prerequisites
 
-- **Node.js** >= 24.0.0
-- **pnpm** 9.12.3 or higher (this project uses pnpm, not npm or yarn)
+- **Node.js**
+- **pnpm** (this project uses pnpm, not npm or yarn)
 
 ### Installation
 
