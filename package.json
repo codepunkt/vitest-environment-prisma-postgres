@@ -1,6 +1,6 @@
 {
   "name": "vitest-environment-prisma-postgres",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "author": "Christoph Werner <christoph@codepunkt.de>",
   "description": "Vitest environment for Prisma & PostgreSQL designed for fast integration tests: seed your database once with production-like data, then run each test in a transaction that is rolled back after execution. Tests remain isolated without expensive reseeding.",
