@@ -1,0 +1,17 @@
+[tools]
+node = "24.11.1"
+"npm:@antfu/ni" = "latest"
+
+[env]
+_.path = ['{{config_root}}/node_modules/.bin']
+
+[settings]
+# This must be enabled to make the hooks work
+experimental = true
+
+# Enabling corepack will install the packageManager specified in package.json
+[[hooks.postinstall]]
+script = "npx corepack enable"
+
+[[hooks.cd]]
+script = "mise install"
