@@ -35,6 +35,10 @@ Both approaches are slow, repetitive, and dominate test runtime.
 You run migrations and seed your test database once.
 Each test then runs inside its own database transaction, which is rolled back automatically after the test finishes. Your tests stay isolated, realistic, and extremely fast, creating dedicated data for every test.
 
+If you want to understand the full design rationale, implementation details, and performance benchmarks behind this environment, check out the in-depth article on my blog:
+
+https://codepunkt.de/writing/blazing-fast-prisma-and-postgres-tests-in-vitest/
+
 ## Features
 
 - Run integration tests against a real PostgreSQL instance.
