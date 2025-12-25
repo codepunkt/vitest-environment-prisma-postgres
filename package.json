@@ -11,7 +11,7 @@
     "url": "https://github.com/codepunkt/vitest-environment-prisma-postgres"
   },
   "engines": {
-    "node": "24.11.1"
+    "node": ">=20"
   },
   "scripts": {
     "build": "tsup",

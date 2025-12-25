@@ -49,6 +49,8 @@ https://codepunkt.de/writing/blazing-fast-prisma-and-postgres-tests-in-vitest/
 
 ## Installation & Setup
 
+> Requires Node.js 20 or newer (CI covers 20.x, 22.x, 24.x).
+
 #### Step 1: Install the environment
 
 First, install the environnment:
