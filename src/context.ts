@@ -86,6 +86,10 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
    * error message.
    */
   const client: PrismaClientLike = new Proxy({} as PrismaClientLike, {
+    has: (_target, name) => {
+      if (!transactionClient) return false;
+      return name in transactionClient;
+    },
     get: (_target, name: keyof PrismaClientLike | symbol) => {
       if (!transactionClient) {
         throw new Error(
