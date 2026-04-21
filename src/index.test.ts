@@ -24,7 +24,7 @@ import environment from '../src/index.js';
 describe('prisma-postgres environment', () => {
   const global: any = {};
   const options = {
-    clientPath: '../test/prisma-client-stub.js',
+    clientPath: './test/prisma-client-stub.js',
   };
 
   beforeEach(() => {

@@ -1,3 +1,5 @@
+import { isAbsolute, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type {
   PrismaClientLike,
@@ -28,7 +30,17 @@ export async function createContext(options: PrismaPostgresEnvironmentOptions) {
    */
   let internalEndTestTransaction: (() => void) | null = null;
 
-  const { PrismaClient } = await import(options.clientPath);
+  // Normalize clientPath so relative/absolute filesystem paths resolve against
+  // the consuming project's CWD instead of this module's location. Leave bare
+  // module specifiers (e.g. '@prisma/client') and existing file:// URLs
+  // untouched so ESM resolution handles them as-is.
+  const isPathLike =
+    options.clientPath.startsWith('.') || isAbsolute(options.clientPath);
+  const clientImportPath = isPathLike
+    ? pathToFileURL(resolve(options.clientPath)).href
+    : options.clientPath;
+
+  const { PrismaClient } = await import(clientImportPath);
   const originalClient: PrismaClientLike = new PrismaClient({
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
     log: options.log,
