@@ -19,8 +19,8 @@ const makeContext = async (
     | 'transactionPending'
     | 'transactionStarted'
     | 'transactionEnded' = 'transactionPending',
-): Promise<[ReturnType<typeof createContext>, PrismaClientStub]> => {
-  const context = createContext({
+): Promise<[Awaited<ReturnType<typeof createContext>>, PrismaClientStub]> => {
+  const context = await createContext({
     clientPath: '../test/prisma-client-stub.js',
     databaseUrl: 'postgres://fake',
     log: ['query'],
