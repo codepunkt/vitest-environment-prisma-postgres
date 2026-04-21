@@ -1,11 +1,10 @@
-import { createRequire } from 'node:module';
+import { isAbsolute, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type {
   PrismaClientLike,
   PrismaPostgresEnvironmentOptions,
 } from './dts/index.js';
-
-const require = createRequire(import.meta.url);
 
 /**
  * Creates the test context used by the `prisma-postgres` Vitest environment.
@@ -14,7 +13,7 @@ const require = createRequire(import.meta.url);
  * @returns The test context object used by both the Vitest environment and the
  * user's Prisma client mock.
  */
-export function createContext(options: PrismaPostgresEnvironmentOptions) {
+export async function createContext(options: PrismaPostgresEnvironmentOptions) {
   let savePointCounter = 0;
 
   /**
@@ -31,7 +30,17 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
    */
   let internalEndTestTransaction: (() => void) | null = null;
 
-  const { PrismaClient } = require(options.clientPath);
+  // Normalize clientPath so relative/absolute filesystem paths resolve against
+  // the consuming project's CWD instead of this module's location. Leave bare
+  // module specifiers (e.g. '@prisma/client') and existing file:// URLs
+  // untouched so ESM resolution handles them as-is.
+  const isPathLike =
+    options.clientPath.startsWith('.') || isAbsolute(options.clientPath);
+  const clientImportPath = isPathLike
+    ? pathToFileURL(resolve(options.clientPath)).href
+    : options.clientPath;
+
+  const { PrismaClient } = await import(clientImportPath);
   const originalClient: PrismaClientLike = new PrismaClient({
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
     log: options.log,

@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type PrismaClient as PrismaClientStub,
@@ -19,9 +21,9 @@ const makeContext = async (
     | 'transactionPending'
     | 'transactionStarted'
     | 'transactionEnded' = 'transactionPending',
-): Promise<[ReturnType<typeof createContext>, PrismaClientStub]> => {
-  const context = createContext({
-    clientPath: '../test/prisma-client-stub.js',
+): Promise<[Awaited<ReturnType<typeof createContext>>, PrismaClientStub]> => {
+  const context = await createContext({
+    clientPath: './test/prisma-client-stub.js',
     databaseUrl: 'postgres://fake',
     log: ['query'],
     transactionOptions: { timeout: 123 },
@@ -45,6 +47,24 @@ describe('createContext', () => {
   it('creates PrismaClient with PrismaPg adapter', async () => {
     vi.stubEnv('DATABASE_URL', 'postgres://fake');
     const [ctx] = await makeContext();
+
+    expect(PrismaPgMock).toHaveBeenCalledWith({
+      connectionString: 'postgres://fake',
+    });
+
+    await ctx.teardown();
+  });
+
+  it('accepts an absolute file:// URL as clientPath', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgres://fake');
+    const fileUrl = pathToFileURL(resolve('./test/prisma-client-stub.js')).href;
+    const ctx = await createContext({
+      clientPath: fileUrl,
+      databaseUrl: 'postgres://fake',
+      log: ['query'],
+      transactionOptions: { timeout: 123 },
+    });
+    await ctx.setup();
 
     expect(PrismaPgMock).toHaveBeenCalledWith({
       connectionString: 'postgres://fake',

@@ -17,7 +17,7 @@ const environment: Environment = {
       throw new Error('no DATABASE_URL defined!');
     }
 
-    const ctx = createContext(options);
+    const ctx = await createContext(options);
     await ctx.setup();
 
     // make context available globally for setupFiles.
