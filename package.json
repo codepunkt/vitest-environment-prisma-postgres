@@ -54,7 +54,7 @@
     "dotenv-cli": "11.0.0",
     "husky": "9.1.7",
     "prisma": "7.2.0",
-    "release-it": "19.2.2",
+    "release-it": "20.2.0",
     "tsup": "8.5.1",
     "typescript": "5.9.3",
     "vitest": "4.0.16"
