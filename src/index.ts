@@ -1,5 +1,5 @@
-import type { Environment } from 'vitest/environments';
-import { builtinEnvironments } from 'vitest/environments';
+import type { Environment } from 'vitest/runtime';
+import { builtinEnvironments } from 'vitest/runtime';
 import { createContext } from './context.js';
 import type { PrismaPostgresEnvironmentOptions } from './dts/index.js';
 
