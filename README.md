@@ -63,7 +63,7 @@ npm install vitest-environment-prisma-postgres --save-dev
 
 Then, ensure that the required peer dependencies are available. This library requires that you have all of the following installed in your project:
 
-- `vitest` in version `4.x`
+- `vitest` in version `4.1` or newer
 - `prisma` in version `7.x`
 - `@prisma/adapter-pg` in version `7.x`
 

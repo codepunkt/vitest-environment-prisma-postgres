@@ -9,7 +9,7 @@ const { teardownMock, nodeSetupMock } = vi.hoisted(() => {
   return { teardownMock, nodeSetupMock };
 });
 
-vi.mock('vitest/environments', () => {
+vi.mock('vitest/runtime', () => {
   return {
     builtinEnvironments: {
       node: {
