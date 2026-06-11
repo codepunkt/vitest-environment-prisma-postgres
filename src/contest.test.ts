@@ -140,4 +140,16 @@ describe('createContext', () => {
     const [ctx, prisma] = await makeContext('transactionStarted');
     expect(prisma.meta).toEqual((ctx.client as PrismaClientStub).meta);
   });
+
+  it('has trap returns true for properties on the transaction client', async () => {
+    const [ctx] = await makeContext('transactionStarted');
+    expect('$connect' in ctx.client).toBe(true);
+    expect('meta' in ctx.client).toBe(true);
+    expect('nonExistentProp' in ctx.client).toBe(false);
+  });
+
+  it('has trap returns false when no transaction is active', async () => {
+    const [ctx] = await makeContext('transactionPending');
+    expect('$connect' in ctx.client).toBe(false);
+  });
 });
