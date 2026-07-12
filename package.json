@@ -48,7 +48,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
     "@prisma/adapter-pg": "7.2.0",
-    "@release-it/conventional-changelog": "10.0.4",
+    "@release-it/conventional-changelog": "11.0.1",
     "@types/node": "24.10.4",
     "@vitest/coverage-v8": "4.1.8",
     "dotenv-cli": "11.0.0",
