@@ -5,7 +5,7 @@
   "author": "Christoph Werner <christoph@codepunkt.de>",
   "description": "Vitest environment for Prisma & PostgreSQL designed for fast integration tests: seed your database once with production-like data, then run each test in a transaction that is rolled back after execution. Tests remain isolated without expensive reseeding.",
   "type": "module",
-  "packageManager": "pnpm@10.27.0",
+  "packageManager": "pnpm@10.34.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/codepunkt/vitest-environment-prisma-postgres"
@@ -46,18 +46,18 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.10",
-    "@prisma/adapter-pg": "7.2.0",
-    "@release-it/conventional-changelog": "10.0.4",
-    "@types/node": "24.10.4",
-    "@vitest/coverage-v8": "4.1.8",
+    "@biomejs/biome": "2.5.11",
+    "@prisma/adapter-pg": "7.10.0",
+    "@release-it/conventional-changelog": "10.0.6",
+    "@types/node": "24.13.3",
+    "@vitest/coverage-v8": "4.1.11",
     "dotenv-cli": "11.0.0",
     "husky": "9.1.7",
-    "prisma": "7.2.0",
-    "release-it": "20.2.0",
+    "prisma": "7.10.0",
+    "release-it": "20.2.1",
     "tsup": "8.5.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.8"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@prisma/adapter-pg": ">=4 <8",
