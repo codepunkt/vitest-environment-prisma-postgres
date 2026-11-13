@@ -27,9 +27,8 @@
     "outDir": "dist",
 
     /* path mapping */
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["./src/*"]
     },
 
     /* included type definitions */
