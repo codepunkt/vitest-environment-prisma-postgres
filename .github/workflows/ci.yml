@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -22,10 +22,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
         with:
-          version: 10.27.0
+          version: 10.34.9
       - name: Install Dependencies
         run: |
-            pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile
       - name: Lint, check formatting and types
         run: |
           pnpm run lint 
