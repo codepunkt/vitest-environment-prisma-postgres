@@ -85,6 +85,54 @@ describe('createContext', () => {
     );
   });
 
+  it('makes $connect and $disconnect no-ops on the proxy client', async () => {
+    const [ctx] = await makeContext();
+    await ctx.beginTestTransaction();
+    await expect(ctx.client.$connect()).resolves.toBeUndefined();
+    await expect(ctx.client.$disconnect()).resolves.toBeUndefined();
+    await ctx.endTestTransaction();
+    await ctx.teardown();
+  });
+
+  it('reports a failure to start the transaction and lets the next test start', async () => {
+    const [ctx, prisma] = await makeContext();
+    prisma.$transaction.mockRejectedValueOnce(
+      new Error('database unavailable'),
+    );
+
+    await expect(ctx.beginTestTransaction()).rejects.toThrow(
+      'database unavailable',
+    );
+    await ctx.beginTestTransaction();
+    await ctx.endTestTransaction();
+    await ctx.teardown();
+  });
+
+  it('waits for rollback before the transaction context can be reused', async () => {
+    const [ctx, prisma] = await makeContext();
+    let finishRollback!: () => void;
+    const rolledBack = new Promise<void>((resolve) => {
+      finishRollback = resolve;
+    });
+    const start = prisma.$transaction.getMockImplementation()!;
+    prisma.$transaction.mockImplementationOnce(async (run) => {
+      try {
+        return await start(run);
+      } finally {
+        await rolledBack;
+      }
+    });
+
+    await ctx.beginTestTransaction();
+    const ending = ctx.endTestTransaction();
+    await expect(ctx.beginTestTransaction()).rejects.toThrow('already active');
+    finishRollback();
+    await ending;
+    await ctx.beginTestTransaction();
+    await ctx.endTestTransaction();
+    await ctx.teardown();
+  });
+
   it('nested $transaction uses SAVEPOINT/RELEASE on success', async () => {
     const [ctx, prisma] = await makeContext('transactionStarted');
 
@@ -126,14 +174,13 @@ describe('createContext', () => {
     );
   });
 
-  it('forwards function properties other than $transaction from the transaction client', async () => {
+  it('forwards function properties other than $transaction and lifecycle methods from the transaction client', async () => {
     const [ctx, prisma] = await makeContext('transactionStarted');
 
     expect(prisma.$connect).toHaveBeenCalledTimes(1);
 
-    // And calling via ctx.client directly should also work
-    await ctx.client.$disconnect();
-    expect(prisma.$disconnect).toHaveBeenCalledTimes(1);
+    await ctx.client.$executeRawUnsafe('SELECT 1');
+    expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith('SELECT 1');
   });
 
   it('forwards non-function properties from the transaction client', async () => {
