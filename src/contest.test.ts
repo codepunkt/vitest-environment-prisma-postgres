@@ -199,4 +199,24 @@ describe('createContext', () => {
     const [ctx] = await makeContext('transactionPending');
     expect('$connect' in ctx.client).toBe(false);
   });
+
+  it('serves static client metadata from the original client outside of a test transaction', async () => {
+    const [pendingCtx, pendingClient] = await makeContext('transactionPending');
+    const [endedCtx, endedClient] = await makeContext('transactionEnded');
+
+    expect((pendingCtx.client as any)._runtimeDataModel).toBe(
+      pendingClient._runtimeDataModel,
+    );
+    expect((endedCtx.client as any)._runtimeDataModel).toBe(
+      endedClient._runtimeDataModel,
+    );
+    expect('_runtimeDataModel' in pendingCtx.client).toBe(true);
+  });
+
+  it('still throws for non-metadata properties outside of a test transaction', async () => {
+    const [ctx] = await makeContext('transactionPending');
+    expect(() => (ctx.client as PrismaClientStub).meta).toThrow(
+      /prismaPostgresTestContext\.client was accessed outside of an active test transaction/,
+    );
+  });
 });

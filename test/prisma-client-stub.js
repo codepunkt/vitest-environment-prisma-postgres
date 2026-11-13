@@ -35,6 +35,9 @@ export class PrismaClient {
   // non-function property to test proxy passthrough
   meta = { source: 'stub', version: 1 };
 
+  // static metadata Prisma generates into every client
+  _runtimeDataModel = { models: {}, enums: {}, types: {} };
+
   $connect = vi.fn();
   $disconnect = vi.fn();
   $executeRawUnsafe = vi.fn();
