@@ -10,6 +10,15 @@ import type {
 const require = createRequire(import.meta.url);
 
 /**
+ * Static metadata that Prisma generates into every client. It is identical on
+ * the original client and the transaction client, and reading it runs no
+ * query, so it is served from the original client even outside a test
+ * transaction. Libraries read it at import time, before any test runs: for
+ * example better-auth's prisma adapter reads `_runtimeDataModel`.
+ */
+const staticClientMetadata = new Set<string | symbol>(['_runtimeDataModel']);
+
+/**
  * Creates the test context used by the `prisma-postgres` Vitest environment.
  *
  * @param options PrismaPostgresEnvironmentOptions
@@ -101,10 +110,16 @@ export function createTransactionContext(
    */
   const client: PrismaClientLike = new Proxy({} as PrismaClientLike, {
     has: (_target, name) => {
-      if (!transactionClient) return false;
+      if (!transactionClient) {
+        return staticClientMetadata.has(name) && name in originalClient;
+      }
       return name in transactionClient;
     },
     get: (_target, name: keyof PrismaClientLike | symbol) => {
+      if (!transactionClient && staticClientMetadata.has(name)) {
+        return (originalClient as any)[name];
+      }
+
       if (!transactionClient) {
         throw new Error(
           [
