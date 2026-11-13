@@ -2,6 +2,8 @@ import { createRequire } from 'node:module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type {
   PrismaClientLike,
+  PrismaPostgresClient,
+  TransactionOptions,
   PrismaPostgresEnvironmentOptions,
 } from './dts/index.js';
 
@@ -15,6 +17,20 @@ const require = createRequire(import.meta.url);
  * user's Prisma client mock.
  */
 export function createContext(options: PrismaPostgresEnvironmentOptions) {
+  const { PrismaClient } = require(options.clientPath);
+  return createTransactionContext(
+    new PrismaClient({
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+      log: options.log,
+    }),
+    options.transactionOptions,
+  );
+}
+
+export function createTransactionContext(
+  originalClient: PrismaPostgresClient,
+  transactionOptions?: TransactionOptions,
+) {
   let savePointCounter = 0;
 
   /**
@@ -22,20 +38,17 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
    * Set in `beginTestTransaction`, cleared in `endTestTransaction`.
    * All calls made through `clientProxy` forward to this instance.
    */
-  let transactionClient: PrismaClientLike | null = null;
+  let transactionClient: Pick<PrismaClientLike, '$executeRawUnsafe'> | null =
+    null;
 
   /**
    * Ends the interactive transaction started by `beginTestTransaction`.
    * Invoked by `afterEach` from the environment's setup file.
    * This triggers a rollback of the test's database changes.
    */
-  let internalEndTestTransaction: (() => void) | null = null;
-
-  const { PrismaClient } = require(options.clientPath);
-  const originalClient: PrismaClientLike = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
-    log: options.log,
-  });
+  let rejectTransaction: (() => void) | undefined;
+  let pendingTransaction: Promise<unknown> | undefined;
+  const rollback = new Error('Rolling back the test transaction');
 
   /**
    * Emulates Prisma's nested `$transaction` behavior inside an active interactive
@@ -65,7 +78,8 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
     const savePointId = `vitest_environment_prisma_postgres_${++savePointCounter}`;
     await tx.$executeRawUnsafe?.(`SAVEPOINT ${savePointId};`);
 
-    const run = () => (Array.isArray(arg) ? Promise.all(arg) : arg(tx!));
+    const run = () =>
+      Array.isArray(arg) ? Promise.all(arg) : arg(tx as PrismaClientLike);
 
     try {
       const result = await run();
@@ -130,40 +144,51 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
    * test can begin.
    */
   const beginTestTransaction = async () => {
-    if (transactionClient !== null) {
+    if (pendingTransaction) {
       throw new Error(
         '[vitest-environment-prisma-postgres] beginTestTransaction called while a test transaction is already active. ' +
-          'This usually indicates misconfigured hooks (beforeEach/afterEach) or concurrent tests using the same context.',
+          'This usually indicates misconfigured hooks or concurrent tests using the same context.',
       );
     }
 
-    return new Promise<void>((resolveBeforeEach) => {
-      const testTransactionFn = (tx: PrismaClientLike) => {
+    const ready = new Promise<void>((resolve, reject) => {
+      pendingTransaction = originalClient.$transaction((tx) => {
         transactionClient = tx;
-        resolveBeforeEach();
-
-        return new Promise((_commitTransaction, rejectTransaction) => {
-          internalEndTestTransaction = () => {
-            rejectTransaction();
-            transactionClient = null;
-          };
+        return new Promise<never>((_commit, fail) => {
+          rejectTransaction = () => fail(rollback);
+          resolve();
         });
-      };
-
-      const testTransactionPromise = originalClient.$transaction(
-        testTransactionFn,
-        options.transactionOptions,
-      );
-
-      // catch transaction rollback errors
-      testTransactionPromise.catch(() => true);
+      }, transactionOptions);
+      void pendingTransaction.catch(reject);
     });
+
+    try {
+      await ready;
+    } catch (error) {
+      pendingTransaction = undefined;
+      throw error;
+    }
+  };
+
+  const endTestTransaction = async () => {
+    if (!rejectTransaction) return;
+
+    rejectTransaction();
+    transactionClient = null;
+    rejectTransaction = undefined;
+    try {
+      await pendingTransaction;
+    } catch (error) {
+      if (error !== rollback) throw error;
+    } finally {
+      pendingTransaction = undefined;
+    }
   };
 
   return {
     client,
     beginTestTransaction,
-    endTestTransaction: () => internalEndTestTransaction?.(),
+    endTestTransaction,
     setup: () => originalClient.$connect(),
     teardown: () => originalClient.$disconnect(),
   };

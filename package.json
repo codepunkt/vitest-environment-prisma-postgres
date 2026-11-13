@@ -40,6 +40,11 @@
       "require": "./dist/index.js",
       "import": "./dist/index.js"
     },
+    "./hooks": {
+      "types": "./dist/hooks.d.ts",
+      "require": "./dist/hooks.js",
+      "import": "./dist/hooks.js"
+    },
     "./setup": {
       "require": "./dist/setup.js",
       "import": "./dist/setup.js"

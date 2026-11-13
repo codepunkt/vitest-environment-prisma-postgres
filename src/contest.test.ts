@@ -85,6 +85,45 @@ describe('createContext', () => {
     );
   });
 
+  it('reports a failure to start the transaction and lets the next test start', async () => {
+    const [ctx, prisma] = await makeContext();
+    prisma.$transaction.mockRejectedValueOnce(
+      new Error('database unavailable'),
+    );
+
+    await expect(ctx.beginTestTransaction()).rejects.toThrow(
+      'database unavailable',
+    );
+    await ctx.beginTestTransaction();
+    await ctx.endTestTransaction();
+    await ctx.teardown();
+  });
+
+  it('waits for rollback before the transaction context can be reused', async () => {
+    const [ctx, prisma] = await makeContext();
+    let finishRollback!: () => void;
+    const rolledBack = new Promise<void>((resolve) => {
+      finishRollback = resolve;
+    });
+    const start = prisma.$transaction.getMockImplementation()!;
+    prisma.$transaction.mockImplementationOnce(async (run) => {
+      try {
+        return await start(run);
+      } finally {
+        await rolledBack;
+      }
+    });
+
+    await ctx.beginTestTransaction();
+    const ending = ctx.endTestTransaction();
+    await expect(ctx.beginTestTransaction()).rejects.toThrow('already active');
+    finishRollback();
+    await ending;
+    await ctx.beginTestTransaction();
+    await ctx.endTestTransaction();
+    await ctx.teardown();
+  });
+
   it('nested $transaction uses SAVEPOINT/RELEASE on success', async () => {
     const [ctx, prisma] = await makeContext('transactionStarted');
 

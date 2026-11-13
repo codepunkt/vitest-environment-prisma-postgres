@@ -2,7 +2,7 @@ declare global {
   var prismaPostgresTestContext: {
     beginTestTransaction: () => Promise<void>;
     client: PrismaClientLike;
-    endTestTransaction: () => void;
+    endTestTransaction: () => Promise<void>;
   };
 }
 
@@ -16,7 +16,16 @@ export interface PrismaClientLike {
   $executeRawUnsafe(sql: string): Promise<unknown>;
 }
 
-interface TransactionOptions {
+export interface PrismaPostgresClient {
+  $connect(): Promise<void>;
+  $disconnect(): Promise<void>;
+  $transaction<T>(
+    fn: (tx: Pick<PrismaClientLike, '$executeRawUnsafe'>) => Promise<T>,
+    options?: TransactionOptions,
+  ): Promise<T>;
+}
+
+export interface TransactionOptions {
   /** The maximum amount of time Prisma client will wait to acquire a transaction from the database. */
   maxWait?: number;
   /** The maximum amount of time the interactive transaction can run before being canceled and rolled back. */

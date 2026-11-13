@@ -124,6 +124,31 @@ Please make sure that you're mocking exactly the module path that your code is u
 
 Make sure to seed your test database at the beginning of every test run. 
 
+## Use your own Prisma client and Vitest environment
+
+Register the transaction hooks in a Vitest setup file to keep your current
+environment (for example, `node` or `jsdom`) and use your application's Prisma
+client factory. The factory can configure the PostgreSQL adapter and return a
+client with Prisma extensions. Register this setup file through `test.setupFiles`
+as the only registration of Prisma rollback hooks for the suite.
+
+```ts
+// vitest.setup.ts
+import { vi } from 'vitest';
+import { setupPrismaPostgres } from 'vitest-environment-prisma-postgres/hooks';
+import { createPrismaClient } from './src/db/create-client';
+
+const prisma = setupPrismaPostgres(createPrismaClient);
+
+vi.mock('./src/db', () => ({ prisma }));
+```
+
+Here, `./src/db` exports the shared client used by your application.
+Keep the factory in a separate module that can be imported independently of that
+shared instance. The factory should return a fresh client connected to your
+test database. Each transaction covers `beforeEach`, the test body, and
+`afterEach`. The hooks disconnect the client after the suite.
+
 ## TypeScript configuration
 
 If you are using TypeScript, make sure to add this environment to your `compilerOptions.types` array in your `tsconfig.json`:
