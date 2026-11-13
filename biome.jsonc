@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
   "files": {
     "includes": ["**", "!!coverage", "!!dist"]
   },
@@ -20,6 +20,13 @@
       "suspicious": {
         "noExplicitAny": "off"
       }
+    }
+  },
+  // Biome 2.6 formats Markdown; CHANGELOG.md is written by release-it, so keep
+  // Markdown as written
+  "markdown": {
+    "formatter": {
+      "enabled": false
     }
   },
   "javascript": {
