@@ -114,6 +114,10 @@ export function createTransactionContext(
         );
       }
 
+      if (name === '$connect' || name === '$disconnect') {
+        return () => Promise.resolve();
+      }
+
       if (name === '$transaction') {
         return fakeInnerTransactionMethod;
       }
