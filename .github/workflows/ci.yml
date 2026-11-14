@@ -42,3 +42,6 @@ jobs:
       - name: Build
         run: |
           pnpm run build
+      - name: Test built package in plain Node.js
+        run: |
+          pnpm run test:dist
