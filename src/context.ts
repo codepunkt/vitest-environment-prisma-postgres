@@ -43,7 +43,7 @@ export async function createContext(options: PrismaPostgresEnvironmentOptions) {
  * turns them into file URLs. Package names, such as `@prisma/client`, are
  * passed to `import()` unchanged.
  */
-function toImportSpecifier(clientPath: string) {
+export function toImportSpecifier(clientPath: string) {
   return clientPath.startsWith('.') || isAbsolute(clientPath)
     ? pathToFileURL(resolve(clientPath)).href
     : clientPath;

@@ -7,6 +7,7 @@ export default defineConfig({
       reporter: ['lcov', 'text'],
       include: ['src/**'],
       exclude: ['src/setup.ts', 'src/dts/**'],
+      thresholds: { 100: true },
     },
   },
 });
