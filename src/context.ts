@@ -1,4 +1,5 @@
-import { createRequire } from 'node:module';
+import { isAbsolute, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type {
   PrismaClientLike,
@@ -6,8 +7,6 @@ import type {
   TransactionOptions,
   PrismaPostgresEnvironmentOptions,
 } from './dts/index.js';
-
-const require = createRequire(import.meta.url);
 
 /**
  * Static metadata that Prisma generates into every client. It is identical on
@@ -25,8 +24,11 @@ const staticClientMetadata = new Set<string | symbol>(['_runtimeDataModel']);
  * @returns The test context object used by both the Vitest environment and the
  * user's Prisma client mock.
  */
-export function createContext(options: PrismaPostgresEnvironmentOptions) {
-  const { PrismaClient } = require(options.clientPath);
+export async function createContext(options: PrismaPostgresEnvironmentOptions) {
+  const module = await import(toImportSpecifier(options.clientPath));
+  // CommonJS clients such as `@prisma/client` may only expose their exports
+  // on `default` when loaded with `import()`.
+  const PrismaClient = module.PrismaClient ?? module.default?.PrismaClient;
   return createTransactionContext(
     new PrismaClient({
       adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -34,6 +36,17 @@ export function createContext(options: PrismaPostgresEnvironmentOptions) {
     }),
     options.transactionOptions,
   );
+}
+
+/**
+ * Resolves relative and absolute file paths against the working directory and
+ * turns them into file URLs. Package names, such as `@prisma/client`, are
+ * passed to `import()` unchanged.
+ */
+function toImportSpecifier(clientPath: string) {
+  return clientPath.startsWith('.') || isAbsolute(clientPath)
+    ? pathToFileURL(resolve(clientPath)).href
+    : clientPath;
 }
 
 export function createTransactionContext(

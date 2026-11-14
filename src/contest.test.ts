@@ -19,9 +19,9 @@ const makeContext = async (
     | 'transactionPending'
     | 'transactionStarted'
     | 'transactionEnded' = 'transactionPending',
-): Promise<[ReturnType<typeof createContext>, PrismaClientStub]> => {
-  const context = createContext({
-    clientPath: '../test/prisma-client-stub.js',
+): Promise<[Awaited<ReturnType<typeof createContext>>, PrismaClientStub]> => {
+  const context = await createContext({
+    clientPath: './test/prisma-client-stub.js',
     databaseUrl: 'postgres://fake',
     log: ['query'],
     transactionOptions: { timeout: 123 },
@@ -49,6 +49,17 @@ describe('createContext', () => {
     expect(PrismaPgMock).toHaveBeenCalledWith({
       connectionString: 'postgres://fake',
     });
+
+    await ctx.teardown();
+  });
+
+  it('loads a client that only has a default export', async () => {
+    const before = prismaClientStubInstances.length;
+    const ctx = await createContext({
+      clientPath: './test/prisma-client-default-stub.js',
+    });
+
+    expect(prismaClientStubInstances).toHaveLength(before + 1);
 
     await ctx.teardown();
   });
