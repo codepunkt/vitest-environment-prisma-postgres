@@ -49,7 +49,7 @@ https://codepunkt.de/writing/blazing-fast-prisma-and-postgres-tests-in-vitest/
 
 ## Installation & Setup
 
-> Requires Node.js 20 or newer (CI covers 20.x, 22.x, 24.x).
+> Requires Node.js 22 or newer (CI covers 22.x, 24.x, 26.x).
 
 #### Step 1: Install the environment
 
@@ -79,8 +79,9 @@ export default defineConfig({
     environment: 'prisma-postgres',
     environmentOptions: {
       'prisma-postgres': {
-        // You must configure the path to your prisma client.
-        clientPath: "./generated/prisma-client"
+        // You must configure your prisma client: a package name, or a file
+        // path relative to the working directory. It is loaded with import().
+        clientPath: "./generated/prisma-client/client.js"
       }
     },
     setupFiles: [
@@ -92,6 +93,8 @@ export default defineConfig({
   }
 });
 ```
+
+Prisma's `prisma-client` generator writes TypeScript. Node.js 22.18 and newer can load it directly if the generator sets `importFileExtension = "ts"` and `clientPath` points to the generated `client.ts`. Otherwise, compile the client to JavaScript first, or create the client yourself as described in [Use your own Prisma client and Vitest environment](#use-your-own-prisma-client-and-vitest-environment).
 
 #### Step 4: Provide a `DATABASE_URL`
 

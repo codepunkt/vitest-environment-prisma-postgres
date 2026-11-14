@@ -35,7 +35,10 @@ export interface TransactionOptions {
 }
 
 export interface PrismaPostgresEnvironmentOptions {
-  /** Path to your Prisma client. */
+  /**
+   * Your Prisma client: a package name, or a file path relative to the working
+   * directory. It is loaded with `import()`.
+   */
   clientPath: string;
   /** Database url (optional). Read from `process.env.DATABASE_URL` otherwise. */
   databaseUrl?: string;

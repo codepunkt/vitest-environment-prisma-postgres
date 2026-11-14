@@ -1,9 +1,11 @@
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type PrismaClient as PrismaClientStub,
   prismaClientStubInstances,
 } from '../test/prisma-client-stub.js';
-import { createContext } from './context.js';
+import { createContext, toImportSpecifier } from './context.js';
 
 const { PrismaPgMock } = vi.hoisted(() => {
   const PrismaPgMock = vi.fn();
@@ -19,9 +21,9 @@ const makeContext = async (
     | 'transactionPending'
     | 'transactionStarted'
     | 'transactionEnded' = 'transactionPending',
-): Promise<[ReturnType<typeof createContext>, PrismaClientStub]> => {
-  const context = createContext({
-    clientPath: '../test/prisma-client-stub.js',
+): Promise<[Awaited<ReturnType<typeof createContext>>, PrismaClientStub]> => {
+  const context = await createContext({
+    clientPath: './test/prisma-client-stub.js',
     databaseUrl: 'postgres://fake',
     log: ['query'],
     transactionOptions: { timeout: 123 },
@@ -49,6 +51,17 @@ describe('createContext', () => {
     expect(PrismaPgMock).toHaveBeenCalledWith({
       connectionString: 'postgres://fake',
     });
+
+    await ctx.teardown();
+  });
+
+  it('loads a client that only has a default export', async () => {
+    const before = prismaClientStubInstances.length;
+    const ctx = await createContext({
+      clientPath: './test/prisma-client-default-stub.js',
+    });
+
+    expect(prismaClientStubInstances).toHaveLength(before + 1);
 
     await ctx.teardown();
   });
@@ -103,6 +116,31 @@ describe('createContext', () => {
     await expect(ctx.beginTestTransaction()).rejects.toThrow(
       'database unavailable',
     );
+    await ctx.beginTestTransaction();
+    await ctx.endTestTransaction();
+    await ctx.teardown();
+  });
+
+  it('ends without a transaction as a no-op', async () => {
+    const [ctx] = await makeContext();
+
+    await expect(ctx.endTestTransaction()).resolves.toBeUndefined();
+    await ctx.teardown();
+  });
+
+  it('rethrows errors other than the rollback when ending a transaction', async () => {
+    const [ctx, prisma] = await makeContext();
+    const start = prisma.$transaction.getMockImplementation()!;
+    prisma.$transaction.mockImplementationOnce(async (run) => {
+      try {
+        return await start(run);
+      } catch {
+        throw new Error('connection lost');
+      }
+    });
+
+    await ctx.beginTestTransaction();
+    await expect(ctx.endTestTransaction()).rejects.toThrow('connection lost');
     await ctx.beginTestTransaction();
     await ctx.endTestTransaction();
     await ctx.teardown();
@@ -218,5 +256,18 @@ describe('createContext', () => {
     expect(() => (ctx.client as PrismaClientStub).meta).toThrow(
       /prismaPostgresTestContext\.client was accessed outside of an active test transaction/,
     );
+  });
+});
+
+describe('toImportSpecifier', () => {
+  it('turns relative and absolute paths into file URLs from the working directory', () => {
+    expect(toImportSpecifier('./client.js')).toBe(
+      pathToFileURL(resolve('client.js')).href,
+    );
+    expect(toImportSpecifier('/abs/client.ts')).toBe('file:///abs/client.ts');
+  });
+
+  it('passes package names through unchanged', () => {
+    expect(toImportSpecifier('@prisma/client')).toBe('@prisma/client');
   });
 });
