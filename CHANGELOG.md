@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.1.0](https://github.com/codepunkt/vitest-environment-prisma-postgres/compare/2.0.0...2.1.0) (2026-11-14)
+
+Vitest 5 is now supported, you can bring your own Prisma client, and `clientPath` works with TypeScript clients. This release requires Node.js 22 or newer.
+
+### ✨ New Features
+
+* **Bring your own Prisma client** ([#51](https://github.com/codepunkt/vitest-environment-prisma-postgres/pull/51)). The new `vitest-environment-prisma-postgres/hooks` entry exports `setupPrismaPostgres(createClient, transactionOptions?)`. Call it in a setup file to wrap every test in a rolled-back transaction while you keep your own Vitest environment (`node`, `jsdom`, ...). Your factory builds the client, so Prisma extensions and custom adapter settings work. See [Use your own Prisma client and Vitest environment](https://github.com/codepunkt/vitest-environment-prisma-postgres#use-your-own-prisma-client-and-vitest-environment).
+* **Vitest 5 support.** The `vitest` peer range is now `>=4.1 <6` ([#48](https://github.com/codepunkt/vitest-environment-prisma-postgres/pull/48), closes [#47](https://github.com/codepunkt/vitest-environment-prisma-postgres/issues/47)).
+
+### 🐛 Bug Fixes
+
+* **`clientPath` loads with `import()`** ([#53](https://github.com/codepunkt/vitest-environment-prisma-postgres/pull/53), [#54](https://github.com/codepunkt/vitest-environment-prisma-postgres/pull/54), fixes [#22](https://github.com/codepunkt/vitest-environment-prisma-postgres/issues/22)). File paths now resolve against the working directory, not the package's `dist/` folder. Directories and paths without an extension still resolve to their entry file. TypeScript clients from Prisma 7's `prisma-client` generator load on Node.js 22.18+ in an ESM package (`"type": "module"`) if the generator sets `importFileExtension = "ts"`. Package names such as `@prisma/client` resolve as before. Thanks to @tywenk for the report and the original fix in #32.
+* **Static client metadata works outside test transactions** ([#52](https://github.com/codepunkt/vitest-environment-prisma-postgres/pull/52)). Reading `_runtimeDataModel` on the client no longer throws before the first test starts. This fixes libraries that read it at import time, such as better-auth 1.7's Prisma adapter.
+
+### ⚠️ Node.js 22 or newer
+
+* Node.js 20 reached end of life in April 2026, so `engines.node` is now `>=22`. CI tests Node.js 22, 24 and 26 ([#53](https://github.com/codepunkt/vitest-environment-prisma-postgres/pull/53)). npm only warns about `engines` by default, but Node 20 is no longer tested.
+
+### 📦 Dependencies
+
+* Built with TypeScript 7, Vitest 5 and tsup 9. Peer ranges for `prisma` and `@prisma/adapter-pg` are unchanged.
+* Test coverage is at 100% and CI enforces it.
+
 ## [2.0.0](https://github.com/codepunkt/vitest-environment-prisma-postgres/compare/1.0.1...2.0.0) (2026-06-11)
 
 ### 🐛 Bug Fixes
