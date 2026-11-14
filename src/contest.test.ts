@@ -267,6 +267,24 @@ describe('toImportSpecifier', () => {
     expect(toImportSpecifier('/abs/client.ts')).toBe('file:///abs/client.ts');
   });
 
+  it('resolves directories and paths without an extension to their entry file', () => {
+    expect(toImportSpecifier('./test/client-dir')).toBe(
+      pathToFileURL(resolve('test/client-dir/index.js')).href,
+    );
+    expect(toImportSpecifier('./test/prisma-client-stub')).toBe(
+      pathToFileURL(resolve('test/prisma-client-stub.js')).href,
+    );
+  });
+
+  it('loads a client from a directory', async () => {
+    const before = prismaClientStubInstances.length;
+    const ctx = await createContext({ clientPath: './test/client-dir' });
+
+    expect(prismaClientStubInstances).toHaveLength(before + 1);
+
+    await ctx.teardown();
+  });
+
   it('passes package names through unchanged', () => {
     expect(toImportSpecifier('@prisma/client')).toBe('@prisma/client');
   });

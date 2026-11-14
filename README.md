@@ -94,7 +94,7 @@ export default defineConfig({
 });
 ```
 
-Prisma's `prisma-client` generator writes TypeScript. Node.js 22.18 and newer can load it directly if the generator sets `importFileExtension = "ts"` and `clientPath` points to the generated `client.ts`. Otherwise, compile the client to JavaScript first, or create the client yourself as described in [Use your own Prisma client and Vitest environment](#use-your-own-prisma-client-and-vitest-environment).
+Prisma's `prisma-client` generator writes TypeScript. Node.js 22.18 and newer can load it directly if the generator sets `importFileExtension = "ts"`, `clientPath` points to the generated `client.ts`, and the nearest `package.json` sets `"type": "module"`. Node.js loads `.ts` files in other packages as CommonJS, and the generated client's `import` statements fail there. Otherwise, compile the client to JavaScript first, or create the client yourself as described in [Use your own Prisma client and Vitest environment](#use-your-own-prisma-client-and-vitest-environment).
 
 #### Step 4: Provide a `DATABASE_URL`
 
