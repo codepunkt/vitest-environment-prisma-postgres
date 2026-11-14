@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { isAbsolute, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -38,15 +39,26 @@ export async function createContext(options: PrismaPostgresEnvironmentOptions) {
   );
 }
 
+const require = createRequire(import.meta.url);
+
 /**
  * Resolves relative and absolute file paths against the working directory and
- * turns them into file URLs. Package names, such as `@prisma/client`, are
+ * turns them into file URLs. Directories and paths without an extension
+ * resolve to their entry file, as they did with `require()`, because
+ * `import()` needs a file. Package names, such as `@prisma/client`, are
  * passed to `import()` unchanged.
  */
 export function toImportSpecifier(clientPath: string) {
-  return clientPath.startsWith('.') || isAbsolute(clientPath)
-    ? pathToFileURL(resolve(clientPath)).href
-    : clientPath;
+  if (!clientPath.startsWith('.') && !isAbsolute(clientPath)) return clientPath;
+
+  const path = resolve(clientPath);
+  let file = path;
+  try {
+    file = require.resolve(path);
+  } catch {
+    // Not resolvable by require(), e.g. a .ts entry: let import() try it.
+  }
+  return pathToFileURL(file).href;
 }
 
 export function createTransactionContext(
